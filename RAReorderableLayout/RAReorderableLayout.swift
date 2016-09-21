@@ -38,39 +38,12 @@ fileprivate func >= <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
 }
 
 
-extension RAReorderableLayoutDataSource {
-  func collectionView(_ collectionView: UICollectionView, reorderingItemAlphaInSection section: Int) -> CGFloat {
-    return 0
-  }
-  func scrollTrigerEdgeInsetsInCollectionView(_ collectionView: UICollectionView) -> UIEdgeInsets {
-    return UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-  }
-  func scrollTrigerPaddingInCollectionView(_ collectionView: UICollectionView) -> UIEdgeInsets {
-    return  UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-  }
-  func scrollSpeedValueInCollectionView(_ collectionView: UICollectionView) -> CGFloat {
-    return 0
-  }
-}
-
-extension RAReorderableLayoutDelegate {
-  func collectionView(_ collectionView: UICollectionView, at: IndexPath, willMoveTo toIndexPath: IndexPath) {}
-  func collectionView(_ collectionView: UICollectionView, at: IndexPath, didMoveTo toIndexPath: IndexPath) {}
-  func collectionView(_ collectionView: UICollectionView, allowMoveAt indexPath: IndexPath) -> Bool {
-    return true
-  }
-  func collectionView(_ collectionView: UICollectionView, at: IndexPath, canMoveTo: IndexPath) -> Bool {
-    return true
-  }
-
-  func collectionView(_ collectionView: UICollectionView, collectionView layout: RAReorderableLayout, willBeginDraggingItemAt indexPath: IndexPath) {}
-  func collectionView(_ collectionView: UICollectionView, collectionView layout: RAReorderableLayout, didBeginDraggingItemAt indexPath: IndexPath) {}
-  func collectionView(_ collectionView: UICollectionView, collectionView layout: RAReorderableLayout, willEndDraggingItemTo indexPath: IndexPath) {}
-  func collectionView(_ collectionView: UICollectionView, collectionView layout: RAReorderableLayout, didEndDraggingItemTo indexPath: IndexPath) {}
-}
-
-
 @objc public protocol RAReorderableLayoutDelegate: UICollectionViewDelegateFlowLayout {
+  @objc optional func collectionView(_ collectionView: UICollectionView, at: IndexPath, willMoveTo toIndexPath: IndexPath)
+  @objc optional func collectionView(_ collectionView: UICollectionView, at: IndexPath, didMoveTo toIndexPath: IndexPath)
+  @objc optional func collectionView(_ collectionView: UICollectionView, allowMoveAt indexPath: IndexPath) -> Bool
+  @objc optional func collectionView(_ collectionView: UICollectionView, at: IndexPath, canMoveTo: IndexPath) -> Bool
+
   @objc optional func collectionView(_ collectionView: UICollectionView, collectionView layout: RAReorderableLayout, willBeginDraggingItemAt indexPath: IndexPath)
   @objc optional func collectionView(_ collectionView: UICollectionView, collectionView layout: RAReorderableLayout, didBeginDraggingItemAt indexPath: IndexPath)
   @objc optional func collectionView(_ collectionView: UICollectionView, collectionView layout: RAReorderableLayout, willEndDraggingItemTo indexPath: IndexPath)
@@ -210,17 +183,17 @@ open class RAReorderableLayout: UICollectionViewFlowLayout, UIGestureRecognizerD
     super.prepare()
 
     // scroll trigger insets
-    if let insets = dataSource?.scrollTrigerEdgeInsetsInCollectionView(self.collectionView!) {
+    if let insets = dataSource?.scrollTrigerEdgeInsetsInCollectionView?(self.collectionView!) {
       trigerInsets = insets
     }
 
     // scroll trier padding
-    if let padding = dataSource?.scrollTrigerPaddingInCollectionView(self.collectionView!) {
+    if let padding = dataSource?.scrollTrigerPaddingInCollectionView?(self.collectionView!) {
       trigerPadding = padding
     }
 
     // scroll speed value
-    if let speed = dataSource?.scrollSpeedValueInCollectionView(collectionView!) {
+    if let speed = dataSource?.scrollSpeedValueInCollectionView?(collectionView!) {
       scrollSpeedValue = speed
     }
   }
@@ -235,7 +208,7 @@ open class RAReorderableLayout: UICollectionViewFlowLayout, UIGestureRecognizerD
       }.forEach {
         // reordering cell alpha
 
-        $0.alpha = dataSource?.collectionView(self.collectionView!, reorderingItemAlphaInSection: $0.indexPath.section) ?? 0
+        $0.alpha = dataSource?.collectionView?(self.collectionView!, reorderingItemAlphaInSection: $0.indexPath.section) ?? 0
     }
 
     return attributesArray
@@ -294,12 +267,12 @@ open class RAReorderableLayout: UICollectionViewFlowLayout, UIGestureRecognizerD
     guard atIndexPath != toIndexPath else { return }
 
     // can move item
-    if let canMove = delegate?.collectionView(collectionView!, at: atIndexPath, canMoveTo: toIndexPath) , !canMove {
+    if let canMove = delegate?.collectionView?(collectionView!, at: atIndexPath, canMoveTo: toIndexPath) , !canMove {
       return
     }
 
     // will move item
-    delegate?.collectionView(collectionView!, at: atIndexPath, willMoveTo: toIndexPath)
+    delegate?.collectionView?(collectionView!, at: atIndexPath, willMoveTo: toIndexPath)
 
     let attribute = self.layoutAttributesForItem(at: toIndexPath)!
     collectionView!.performBatchUpdates({
@@ -311,7 +284,7 @@ open class RAReorderableLayout: UICollectionViewFlowLayout, UIGestureRecognizerD
       self.collectionView!.insertItems(at: [toIndexPath])
 
       // did move item
-      self.delegate?.collectionView(self.collectionView!, at: atIndexPath, didMoveTo: toIndexPath)
+      self.delegate?.collectionView?(self.collectionView!, at: atIndexPath, didMoveTo: toIndexPath)
       }, completion:nil)
   }
 
@@ -401,7 +374,7 @@ open class RAReorderableLayout: UICollectionViewFlowLayout, UIGestureRecognizerD
     guard cellFakeView != nil else { return }
 
     // will end drag item
-    self.delegate?.collectionView(self.collectionView!, collectionView: self, willEndDraggingItemTo: toIndexPath)
+    self.delegate?.collectionView?(self.collectionView!, collectionView: self, willEndDraggingItemTo: toIndexPath)
 
     collectionView?.scrollsToTop = true
 
@@ -415,7 +388,7 @@ open class RAReorderableLayout: UICollectionViewFlowLayout, UIGestureRecognizerD
       self.invalidateLayout()
 
       // did end drag item
-      self.delegate?.collectionView(self.collectionView!, collectionView: self, didEndDraggingItemTo: toIndexPath)
+      self.delegate?.collectionView?(self.collectionView!, collectionView: self, didEndDraggingItemTo: toIndexPath)
     }
   }
 
@@ -433,7 +406,7 @@ open class RAReorderableLayout: UICollectionViewFlowLayout, UIGestureRecognizerD
     switch longPress.state {
     case .began:
       // will begin drag item
-      delegate?.collectionView(self.collectionView!, collectionView: self, willBeginDraggingItemAt: indexPath!)
+      delegate?.collectionView?(self.collectionView!, collectionView: self, willBeginDraggingItemAt: indexPath!)
       collectionView?.scrollsToTop = false
 
       let currentCell = collectionView?.cellForItem(at: indexPath!)
@@ -451,7 +424,7 @@ open class RAReorderableLayout: UICollectionViewFlowLayout, UIGestureRecognizerD
       cellFakeView?.pushFowardView()
 
       // did begin drag item
-      delegate?.collectionView(self.collectionView!, collectionView: self, didBeginDraggingItemAt: indexPath!)
+      delegate?.collectionView?(self.collectionView!, collectionView: self, didBeginDraggingItemAt: indexPath!)
 
     case .cancelled, .ended:
       cancelDrag(indexPath)
@@ -486,7 +459,7 @@ open class RAReorderableLayout: UICollectionViewFlowLayout, UIGestureRecognizerD
     // allow move item
     let location = gestureRecognizer.location(in: collectionView)
     if let indexPath = collectionView?.indexPathForItem(at: location) ,
-      delegate?.collectionView(self.collectionView!, allowMoveAt: indexPath) == false {
+      delegate?.collectionView?(self.collectionView!, allowMoveAt: indexPath) == false {
       return false
     }
 
