@@ -8,6 +8,5 @@ Pod::Spec.new do |s|
   s.platform     = :ios, '8.0'
   s.source       = { :git => "https://github.com/ra1028/RAReorderableLayout.git", :tag => s.version.to_s }
   s.requires_arc = true
-  s.xcconfig     = { 'SWIFT_VERSION' => '3.0' }
   s.source_files =  'RAReorderableLayout/*.swift'
 end
